@@ -1,6 +1,21 @@
 const { createHash } = require('crypto');
+const fs = require('fs').promises;
+const path = require('path');
 
-let keys = {};
+const keysFile = path.join(process.cwd(), 'keys.json');
+
+async function loadKeys() {
+    try {
+        const data = await fs.readFile(keysFile, 'utf8');
+        return JSON.parse(data);
+    } catch (error) {
+        return {};
+    }
+}
+
+async function saveKeys(keys) {
+    await fs.writeFile(keysFile, JSON.stringify(keys, null, 2));
+}
 
 function generateKey() {
     const random = Math.random().toString().substr(2, 12);
@@ -26,42 +41,30 @@ module.exports = async (req, res) => {
     }
 
     try {
-        let body = '';
-        req.on('data', chunk => {
-            body += chunk.toString();
-        });
+        const { hwid } = req.body;
+        if (!hwid) {
+            return res.status(400).json({ success: false, error: 'HWID is required' });
+        }
 
-        req.on('end', async () => {
-            try {
-                const { hwid } = JSON.parse(body);
-                if (!hwid) {
-                    return res.status(400).json({ success: false, error: 'HWID is required' });
-                }
+        const keys = await loadKeys();
+        const key = generateKey();
+        const hashedHWID = hashHWID(hwid);
 
-                const key = generateKey();
-                const hashedHWID = hashHWID(hwid);
+        keys[key] = {
+            hwid: hashedHWID,
+            generated_at: new Date().toISOString(),
+            enabled: true
+        };
 
-                // Store the key
-                keys[key] = {
-                    hwid: hashedHWID,
-                    generated_at: new Date().toISOString(),
-                    enabled: true
-                };
+        await saveKeys(keys);
 
-                console.log('Generated key:', key, 'for HWID:', hashedHWID);
-                console.log('Total keys:', Object.keys(keys).length);
-
-                res.status(200).json({ 
-                    success: true, 
-                    key: key
-                });
-
-            } catch (parseError) {
-                res.status(400).json({ success: false, error: 'Invalid JSON format' });
-            }
+        res.status(200).json({ 
+            success: true, 
+            key: key
         });
 
     } catch (error) {
-        res.status(500).json({ success: false, error: 'Internal server error: ' + error.message });
+        console.error('Generate key error:', error);
+        res.status(500).json({ success: false, error: 'Internal server error' });
     }
 };
