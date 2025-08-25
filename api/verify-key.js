@@ -1,5 +1,5 @@
 const { createHash } = require('crypto');
-const { loadKeys } = require('./lib/db');
+const { getKeys } = require('./lib/memoryDB');
 
 function hashHWID(hwid) {
     return createHash('sha256').update(hwid).digest('hex');
@@ -25,7 +25,7 @@ module.exports = async (req, res) => {
             return res.status(400).json({ valid: false, error: 'Key and HWID are required' });
         }
 
-        const keys = await loadKeys();
+        const keys = getKeys();
         const hashedHWID = hashHWID(hwid);
         const keyData = keys[key];
 
