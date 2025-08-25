@@ -1,21 +1,5 @@
 const { createHash } = require('crypto');
-const fs = require('fs').promises;
-const path = require('path');
-
-const keysFile = path.join(process.cwd(), 'keys.json');
-
-async function loadKeys() {
-    try {
-        const data = await fs.readFile(keysFile, 'utf8');
-        return JSON.parse(data);
-    } catch (error) {
-        return {};
-    }
-}
-
-async function saveKeys(keys) {
-    await fs.writeFile(keysFile, JSON.stringify(keys, null, 2));
-}
+const { loadKeys, saveKeys } = require('./lib/db');
 
 function generateKey() {
     const random = Math.random().toString().substr(2, 12);
@@ -56,7 +40,10 @@ module.exports = async (req, res) => {
             enabled: true
         };
 
-        await saveKeys(keys);
+        const saved = await saveKeys(keys);
+        if (!saved) {
+            return res.status(500).json({ success: false, error: 'Failed to save key' });
+        }
 
         res.status(200).json({ 
             success: true, 
