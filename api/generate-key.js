@@ -1,6 +1,5 @@
 const { createHash } = require('crypto');
 
-// Simple in-memory storage (use database in production)
 let keys = {};
 
 function generateKey() {
@@ -27,27 +26,42 @@ module.exports = async (req, res) => {
     }
 
     try {
-        const { hwid } = req.body;
-        if (!hwid) {
-            return res.status(400).json({ success: false, error: 'HWID is required' });
-        }
+        let body = '';
+        req.on('data', chunk => {
+            body += chunk.toString();
+        });
 
-        const key = generateKey();
-        const hashedHWID = hashHWID(hwid);
+        req.on('end', async () => {
+            try {
+                const { hwid } = JSON.parse(body);
+                if (!hwid) {
+                    return res.status(400).json({ success: false, error: 'HWID is required' });
+                }
 
-        // Store the key
-        keys[key] = {
-            hwid: hashedHWID,
-            generated_at: new Date().toISOString(),
-            enabled: true
-        };
+                const key = generateKey();
+                const hashedHWID = hashHWID(hwid);
 
-        res.status(200).json({ 
-            success: true, 
-            key: key
+                // Store the key
+                keys[key] = {
+                    hwid: hashedHWID,
+                    generated_at: new Date().toISOString(),
+                    enabled: true
+                };
+
+                console.log('Generated key:', key, 'for HWID:', hashedHWID);
+                console.log('Total keys:', Object.keys(keys).length);
+
+                res.status(200).json({ 
+                    success: true, 
+                    key: key
+                });
+
+            } catch (parseError) {
+                res.status(400).json({ success: false, error: 'Invalid JSON format' });
+            }
         });
 
     } catch (error) {
-        res.status(500).json({ success: false, error: 'Internal server error' });
+        res.status(500).json({ success: false, error: 'Internal server error: ' + error.message });
     }
 };
