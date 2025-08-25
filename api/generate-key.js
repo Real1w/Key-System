@@ -1,11 +1,5 @@
 const { createHash } = require('crypto');
-const { loadKeys, saveKeys } = require('./lib/db');
-
-function generateKey() {
-    const random = Math.random().toString().substr(2, 12);
-    const timestamp = Date.now().toString().substr(-6);
-    return `ModX${random}${timestamp}`;
-}
+const { getKeys, setKeys, generateKey } = require('./lib/memoryDB');
 
 function hashHWID(hwid) {
     return createHash('sha256').update(hwid).digest('hex');
@@ -30,20 +24,18 @@ module.exports = async (req, res) => {
             return res.status(400).json({ success: false, error: 'HWID is required' });
         }
 
-        const keys = await loadKeys();
+        const keys = getKeys();
         const key = generateKey();
         const hashedHWID = hashHWID(hwid);
 
+        // Store the key
         keys[key] = {
             hwid: hashedHWID,
             generated_at: new Date().toISOString(),
             enabled: true
         };
 
-        const saved = await saveKeys(keys);
-        if (!saved) {
-            return res.status(500).json({ success: false, error: 'Failed to save key' });
-        }
+        setKeys(keys);
 
         res.status(200).json({ 
             success: true, 
