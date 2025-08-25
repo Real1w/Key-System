@@ -1,28 +1,10 @@
-const { getKeys } = require('./lib/memoryDB');
+let keys = global.keys || {};
+global.keys = keys;
 
-module.exports = async (req, res) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+export default function handler(req, res) {
+  if (req.method !== "GET") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
 
-    if (req.method === 'OPTIONS') {
-        return res.status(200).end();
-    }
-
-    if (req.method !== 'GET') {
-        return res.status(405).json({ success: false, error: 'Method not allowed' });
-    }
-
-    try {
-        const keys = getKeys();
-        
-        res.status(200).json({ 
-            success: true, 
-            keys: keys 
-        });
-
-    } catch (error) {
-        console.error('Get keys error:', error);
-        res.status(500).json({ success: false, error: 'Internal server error' });
-    }
-};
+  return res.json({ keys });
+}
