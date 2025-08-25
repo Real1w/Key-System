@@ -1,4 +1,16 @@
-let keys = {};
+const fs = require('fs').promises;
+const path = require('path');
+
+const keysFile = path.join(process.cwd(), 'keys.json');
+
+async function loadKeys() {
+    try {
+        const data = await fs.readFile(keysFile, 'utf8');
+        return JSON.parse(data);
+    } catch (error) {
+        return {};
+    }
+}
 
 module.exports = async (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -14,12 +26,15 @@ module.exports = async (req, res) => {
     }
 
     try {
+        const keys = await loadKeys();
+        
         res.status(200).json({ 
             success: true, 
             keys: keys 
         });
 
     } catch (error) {
+        console.error('Get keys error:', error);
         res.status(500).json({ success: false, error: 'Internal server error' });
     }
 };
