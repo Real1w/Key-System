@@ -1,4 +1,4 @@
-const { loadKeys, saveKeys } = require('./lib/db');
+const { getKeys, setKeys } = require('./lib/memoryDB');
 
 module.exports = async (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -20,7 +20,7 @@ module.exports = async (req, res) => {
             return res.status(400).json({ success: false, error: 'Key is required' });
         }
 
-        const keys = await loadKeys();
+        const keys = getKeys();
         
         if (!keys[key]) {
             return res.status(404).json({ success: false, error: 'Key not found' });
@@ -34,10 +34,7 @@ module.exports = async (req, res) => {
             return res.status(400).json({ success: false, error: 'Invalid action' });
         }
 
-        const saved = await saveKeys(keys);
-        if (!saved) {
-            return res.status(500).json({ success: false, error: 'Failed to save key state' });
-        }
+        setKeys(keys);
 
         res.status(200).json({ 
             success: true, 
