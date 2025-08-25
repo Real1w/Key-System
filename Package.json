@@ -4,5 +4,13 @@
   "description": "ModX Admin Panel for Key Management",
   "scripts": {
     "dev": "vercel dev"
+  },
+  "dependencies": {
+    "fs": "0.0.1-security",
+    "path": "^0.12.7",
+    "crypto": "^1.0.1"
+  },
+  "devDependencies": {
+    "@vercel/node": "^2.0.0"
   }
 }
