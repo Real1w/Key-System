@@ -1,4 +1,8 @@
 {
-  "name": "modx-vercel-api",
-  "version": "1.0.0"
+  "name": "modx-key-api",
+  "version": "1.0.0",
+  "description": "ModX Key Verification API",
+  "engines": {
+    "node": ">=18.x"
+  }
 }
