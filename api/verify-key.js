@@ -1,7 +1,17 @@
 const { createHash } = require('crypto');
+const fs = require('fs').promises;
+const path = require('path');
 
-// Use a simple in-memory storage (for production, use a database)
-let keys = {};
+const keysFile = path.join(process.cwd(), 'keys.json');
+
+async function loadKeys() {
+    try {
+        const data = await fs.readFile(keysFile, 'utf8');
+        return JSON.parse(data);
+    } catch (error) {
+        return {};
+    }
+}
 
 function hashHWID(hwid) {
     return createHash('sha256').update(hwid).digest('hex');
@@ -21,55 +31,47 @@ module.exports = async (req, res) => {
     }
 
     try {
-        let body = '';
-        req.on('data', chunk => {
-            body += chunk.toString();
-        });
+        const { key, hwid } = req.body;
+        
+        if (!key || !hwid) {
+            return res.status(400).json({ valid: false, error: 'Key and HWID are required' });
+        }
 
-        req.on('end', async () => {
-            try {
-                const { key, hwid } = JSON.parse(body);
-                
-                if (!key || !hwid) {
-                    return res.status(400).json({ valid: false, error: 'Key and HWID are required' });
-                }
+        const keys = await loadKeys();
+        const hashedHWID = hashHWID(hwid);
+        const keyData = keys[key];
 
-                const hashedHWID = hashHWID(hwid);
-                const keyData = keys[key];
+        await new Promise(resolve => setTimeout(resolve, 100));
 
-                if (!keyData) {
-                    return res.status(200).json({ 
-                        valid: false, 
-                        error: 'Key not found' 
-                    });
-                }
+        if (!keyData) {
+            return res.status(200).json({ 
+                valid: false, 
+                error: 'Key not found' 
+            });
+        }
 
-                if (keyData.hwid !== hashedHWID) {
-                    return res.status(200).json({ 
-                        valid: false, 
-                        error: 'HWID mismatch' 
-                    });
-                }
+        if (keyData.hwid !== hashedHWID) {
+            return res.status(200).json({ 
+                valid: false, 
+                error: 'HWID mismatch. Expected: ' + keyData.hwid + ' Got: ' + hashedHWID
+            });
+        }
 
-                if (!keyData.enabled) {
-                    return res.status(200).json({ 
-                        valid: false, 
-                        error: 'Key is disabled' 
-                    });
-                }
+        if (!keyData.enabled) {
+            return res.status(200).json({ 
+                valid: false, 
+                error: 'Key is disabled' 
+            });
+        }
 
-                res.status(200).json({ 
-                    valid: true, 
-                    message: 'Key verified successfully',
-                    generated_at: keyData.generated_at
-                });
-
-            } catch (parseError) {
-                res.status(400).json({ valid: false, error: 'Invalid JSON format' });
-            }
+        res.status(200).json({ 
+            valid: true, 
+            message: 'Key verified successfully',
+            generated_at: keyData.generated_at
         });
 
     } catch (error) {
-        res.status(500).json({ valid: false, error: 'Internal server error: ' + error.message });
+        console.error('Verify key error:', error);
+        res.status(500).json({ valid: false, error: 'Internal server error' });
     }
 };
