@@ -1,17 +1,5 @@
 const { createHash } = require('crypto');
-const fs = require('fs').promises;
-const path = require('path');
-
-const keysFile = path.join(process.cwd(), 'keys.json');
-
-async function loadKeys() {
-    try {
-        const data = await fs.readFile(keysFile, 'utf8');
-        return JSON.parse(data);
-    } catch (error) {
-        return {};
-    }
-}
+const { loadKeys } = require('./lib/db');
 
 function hashHWID(hwid) {
     return createHash('sha256').update(hwid).digest('hex');
@@ -41,8 +29,6 @@ module.exports = async (req, res) => {
         const hashedHWID = hashHWID(hwid);
         const keyData = keys[key];
 
-        await new Promise(resolve => setTimeout(resolve, 100));
-
         if (!keyData) {
             return res.status(200).json({ 
                 valid: false, 
@@ -53,7 +39,7 @@ module.exports = async (req, res) => {
         if (keyData.hwid !== hashedHWID) {
             return res.status(200).json({ 
                 valid: false, 
-                error: 'HWID mismatch. Expected: ' + keyData.hwid + ' Got: ' + hashedHWID
+                error: 'HWID mismatch' 
             });
         }
 
