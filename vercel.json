@@ -1,7 +1,6 @@
 {
   "functions": {
-    "api/verify.py": {
-      "runtime": "python3.9",
+    "api/verify.js": {
       "maxDuration": 10
     }
   }
