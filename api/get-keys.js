@@ -1,4 +1,4 @@
-const { loadKeys } = require('./lib/db');
+const { getKeys } = require('./lib/memoryDB');
 
 module.exports = async (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -14,7 +14,7 @@ module.exports = async (req, res) => {
     }
 
     try {
-        const keys = await loadKeys();
+        const keys = getKeys();
         
         res.status(200).json({ 
             success: true, 
