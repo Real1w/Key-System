@@ -1,20 +1,4 @@
-const fs = require('fs').promises;
-const path = require('path');
-
-const keysFile = path.join(process.cwd(), 'keys.json');
-
-async function loadKeys() {
-    try {
-        const data = await fs.readFile(keysFile, 'utf8');
-        return JSON.parse(data);
-    } catch (error) {
-        return {};
-    }
-}
-
-async function saveKeys(keys) {
-    await fs.writeFile(keysFile, JSON.stringify(keys, null, 2));
-}
+const { loadKeys, saveKeys } = require('./lib/db');
 
 module.exports = async (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -50,7 +34,10 @@ module.exports = async (req, res) => {
             return res.status(400).json({ success: false, error: 'Invalid action' });
         }
 
-        await saveKeys(keys);
+        const saved = await saveKeys(keys);
+        if (!saved) {
+            return res.status(500).json({ success: false, error: 'Failed to save key state' });
+        }
 
         res.status(200).json({ 
             success: true, 
