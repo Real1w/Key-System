@@ -30,7 +30,10 @@ module.exports = async (req, res) => {
         const keyData = keys[key];
 
         if (!keyData || keyData.hwid !== hashedHWID || !keyData.enabled) {
-            return res.status(200).json({ valid: false, error: 'Invalid key or HWID' });
+            return res.status(200).json({ 
+                valid: false, 
+                error: 'Invalid key or HWID' 
+            });
         }
 
         res.status(200).json({ 
