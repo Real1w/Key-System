@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ModX Admin Panel</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background: #1e1e1e; color: white; }
+        .container { background: #2d2d2d; padding: 20px; border-radius: 8px; }
+        input, button, select { padding: 10px; margin: 5px 0; border-radius: 4px; }
+        input, select { width: 100%; background: #3d3d3d; color: white; border: 1px solid #555; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; margin-right: 10px; }
+        button.delete { background: #dc3545; }
+        button.enable { background: #28a745; }
+        .section { margin-bottom: 30px; padding: 15px; background: #252525; border-radius: 5px; }
+        #result { margin-top: 20px; padding: 10px; background: #3d3d3d; display: none; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #555; }
+        th { background: #333; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ModX Admin Panel</h1>
+        
+        <div class="section">
+            <h2>Generate Key</h2>
+            <input type="text" id="genHwid" placeholder="Enter HWID">
+            <button onclick="generateKey()">Generate Key</button>
+            <div id="genResult"></div>
+        </div>
+
+        <div class="section">
+            <h2>Disable/Enable Key</h2>
+            <input type="text" id="keyToToggle" placeholder="Enter Key">
+            <select id="keyAction">
+                <option value="disable">Disable Key</option>
+                <option value="enable">Enable Key</option>
+            </select>
+            <button onclick="toggleKey()">Apply</button>
+            <div id="toggleResult"></div>
+        </div>
+
+        <div class="section">
+            <h2>View All Keys</h2>
+            <button onclick="viewKeys()">View Keys</button>
+            <div id="keysList"></div>
+        </div>
+    </div>
+
+    <script>
+        async function generateKey() {
+            const hwid = document.getElementById('genHwid').value;
+            if (!hwid) return alert('Please enter HWID');
+            
+            const response = await fetch('/api/generate-key', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ hwid })
+            });
+            
+            const result = await response.json();
+            const resultDiv = document.getElementById('genResult');
+            
+            if (result.success) {
+                resultDiv.innerHTML = `
+                    <h3>Key Generated:</h3>
+                    <p><strong>Key:</strong> ${result.key}</p>
+                    <p><strong>HWID:</strong> ${hwid}</p>
+                    <p>Copy this key and give it to the user.</p>
+                `;
+                resultDiv.style.display = 'block';
+            } else {
+                resultDiv.innerHTML = `<p style="color: red;">Error: ${result.error}</p>`;
+                resultDiv.style.display = 'block';
+            }
+        }
+
+        async function toggleKey() {
+            const key = document.getElementById('keyToToggle').value;
+            const action = document.getElementById('keyAction').value;
+            
+            if (!key) return alert('Please enter a key');
+            
+            const response = await fetch('/api/toggle-key', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ key, action })
+            });
+            
+            const result = await response.json();
+            const resultDiv = document.getElementById('toggleResult');
+            
+            if (result.success) {
+                resultDiv.innerHTML = `<p style="color: green;">Key ${action}d successfully</p>`;
+                resultDiv.style.display = 'block';
+            } else {
+                resultDiv.innerHTML = `<p style="color: red;">Error: ${result.error}</p>`;
+                resultDiv.style.display = 'block';
+            }
+        }
+
+        async function viewKeys() {
+            const response = await fetch('/api/get-keys');
+            const result = await response.json();
+            const keysDiv = document.getElementById('keysList');
+            
+            if (result.success && result.keys) {
+                let html = '<h3>All Keys:</h3><table>';
+                html += '<tr><th>Key</th><th>HWID</th><th>Status</th><th>Generated</th><th>Action</th></tr>';
+                
+                for (const [key, keyData] of Object.entries(result.keys)) {
+                    html += `
+                        <tr>
+                            <td>${key}</td>
+                            <td>${keyData.hwid}</td>
+                            <td>${keyData.enabled ? 'Enabled' : 'Disabled'}</td>
+                            <td>${new Date(keyData.generated_at).toLocaleDateString()}</td>
+                            <td>
+                                <button onclick="toggleSpecificKey('${key}', ${!keyData.enabled})" 
+                                        class="${keyData.enabled ? 'delete' : 'enable'}">
+                                    ${keyData.enabled ? 'Disable' : 'Enable'}
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }
+                
+                html += '</table>';
+                keysDiv.innerHTML = html;
+            } else {
+                keysDiv.innerHTML = '<p>No keys found or error loading keys</p>';
+            }
+        }
+
+        async function toggleSpecificKey(key, enable) {
+            const action = enable ? 'enable' : 'disable';
+            
+            const response = await fetch('/api/toggle-key', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ key, action })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                alert(`Key ${action}d successfully`);
+                viewKeys(); // Refresh the list
+            } else {
+                alert(`Error: ${result.error}`);
+            }
+        }
+    </script>
+</body>
+</html>
