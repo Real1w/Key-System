@@ -55,7 +55,6 @@ export default function handler(req, res) {
   }
 
   keys[key].last_used = Date.now();
-
   console.log(`Key verification successful: ${key}`);
   
   res.json({ 
