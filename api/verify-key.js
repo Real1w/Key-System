@@ -1,14 +1,22 @@
-import { getKey } from "./_db";
+import { keys } from "./generate-key";
 
 export default function handler(req, res) {
-  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
 
   const { key, hwid } = req.body;
-  const data = getKey(key);
+  const record = keys[key];
 
-  if (!data) return res.json({ valid: false, error: "Key not found" });
-  if (!data.enabled) return res.json({ valid: false, error: "Key disabled" });
-  if (data.hwid !== hwid) return res.json({ valid: false, error: "HWID mismatch" });
+  if (!record) {
+    return res.json({ valid: false, error: "Key not found" });
+  }
+  if (record.hwid !== hwid) {
+    return res.json({ valid: false, error: "HWID mismatch" });
+  }
+  if (!record.enabled) {
+    return res.json({ valid: false, error: "Key disabled" });
+  }
 
-  return res.json({ valid: true, message: "Key valid" });
+  res.json({ valid: true, message: "Key valid" });
 }
