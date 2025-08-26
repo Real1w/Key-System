@@ -1,5 +1,5 @@
-import { getAllKeys } from "./_db";
+import { keys } from "./generate-key";
 
 export default function handler(req, res) {
-  return res.json(getAllKeys());
+  res.json({ success: true, keys });
 }
