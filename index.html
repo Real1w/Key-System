@@ -2,8 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ModX Key System - Admin Panel</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
+    
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
@@ -11,7 +16,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 40px;
+      padding: 20px;
       min-height: 100vh;
       margin: 0;
     }
@@ -24,41 +29,69 @@
       text-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
     }
     
+    .api-status {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 10px 15px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: bold;
+      z-index: 1000;
+      transition: all 0.3s ease;
+    }
+    
+    .api-status.online {
+      background: rgba(34, 197, 94, 0.2);
+      color: #22c55e;
+      border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+    
+    .api-status.offline {
+      background: rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+    
     .container {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
       gap: 20px;
-      max-width: 1200px;
+      max-width: 1400px;
       width: 100%;
     }
     
     .card {
-      background: rgba(30, 41, 59, 0.8);
+      background: rgba(30, 41, 59, 0.9);
       padding: 25px;
       border-radius: 16px;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
       backdrop-filter: blur(10px);
       border: 1px solid rgba(56, 189, 248, 0.1);
       transition: transform 0.3s ease, box-shadow 0.3s ease;
+      min-height: 300px;
     }
     
     .card:hover {
-      transform: translateY(-5px);
+      transform: translateY(-3px);
       box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
     }
     
     .card h3 {
       color: #38bdf8;
-      margin-top: 0;
+      margin: 0 0 20px 0;
       font-size: 1.3em;
       border-bottom: 2px solid rgba(56, 189, 248, 0.3);
       padding-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
     
-    input, button, textarea {
+    input, button, textarea, select {
       width: 100%;
       padding: 12px;
-      margin: 10px 0;
+      margin: 8px 0;
       border-radius: 8px;
       border: 1px solid rgba(56, 189, 248, 0.2);
       font-size: 14px;
@@ -66,12 +99,12 @@
       box-sizing: border-box;
     }
     
-    input, textarea {
+    input, textarea, select {
       background: rgba(51, 65, 85, 0.8);
       color: #e2e8f0;
     }
     
-    input:focus, textarea:focus {
+    input:focus, textarea:focus, select:focus {
       outline: none;
       border-color: #38bdf8;
       box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
@@ -84,9 +117,12 @@
       cursor: pointer;
       text-transform: uppercase;
       letter-spacing: 0.5px;
+      border: none;
+      position: relative;
+      overflow: hidden;
     }
     
-    button:hover {
+    button:hover:not(:disabled) {
       background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
       transform: translateY(-2px);
       box-shadow: 0 5px 15px rgba(56, 189, 248, 0.4);
@@ -97,72 +133,182 @@
       color: #9ca3af;
       cursor: not-allowed;
       transform: none;
+      box-shadow: none;
+    }
+    
+    .btn-danger {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: white;
+    }
+    
+    .btn-danger:hover:not(:disabled) {
+      background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
     }
     
     .result-box {
-      background: rgba(15, 23, 42, 0.9);
+      background: rgba(15, 23, 42, 0.95);
       padding: 15px;
       border-radius: 8px;
       overflow-x: auto;
-      max-height: 300px;
+      max-height: 250px;
       border: 1px solid rgba(56, 189, 248, 0.2);
       font-family: 'Courier New', monospace;
       font-size: 12px;
-      line-height: 1.4;
+      line-height: 1.5;
       white-space: pre-wrap;
+      word-wrap: break-word;
+      margin-top: 10px;
     }
     
-    .status {
-      padding: 10px;
-      border-radius: 6px;
-      margin: 10px 0;
-      font-weight: bold;
+    .result-box.success {
+      border-color: rgba(34, 197, 94, 0.3);
+      background: rgba(15, 23, 42, 0.95);
     }
     
-    .success {
-      background: rgba(34, 197, 94, 0.2);
-      color: #22c55e;
-      border: 1px solid rgba(34, 197, 94, 0.3);
-    }
-    
-    .error {
-      background: rgba(239, 68, 68, 0.2);
-      color: #ef4444;
-      border: 1px solid rgba(239, 68, 68, 0.3);
+    .result-box.error {
+      border-color: rgba(239, 68, 68, 0.3);
+      background: rgba(15, 23, 42, 0.95);
     }
     
     .loading {
       display: inline-block;
-      width: 20px;
-      height: 20px;
-      border: 3px solid rgba(56, 189, 248, 0.3);
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(56, 189, 248, 0.3);
       border-radius: 50%;
       border-top-color: #38bdf8;
       animation: spin 1s ease-in-out infinite;
+      margin-right: 8px;
     }
     
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
+    
+    .input-group {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    
+    .input-group input {
+      margin: 0;
+    }
+    
+    .copy-btn {
+      min-width: 80px;
+      padding: 8px 12px;
+      font-size: 12px;
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 15px;
+      margin: 15px 0;
+    }
+    
+    .stat-item {
+      text-align: center;
+      padding: 15px;
+      background: rgba(51, 65, 85, 0.5);
+      border-radius: 8px;
+      border: 1px solid rgba(56, 189, 248, 0.1);
+    }
+    
+    .stat-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: #38bdf8;
+    }
+    
+    .stat-label {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-top: 5px;
+    }
+    
+    .key-item {
+      background: rgba(51, 65, 85, 0.3);
+      margin: 10px 0;
+      padding: 15px;
+      border-radius: 8px;
+      border-left: 4px solid #38bdf8;
+    }
+    
+    .key-item.inactive {
+      border-left-color: #ef4444;
+      opacity: 0.7;
+    }
+    
+    .key-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    
+    .key-actions button {
+      flex: 1;
+      padding: 6px 10px;
+      font-size: 11px;
+      margin: 0;
+    }
+    
+    @media (max-width: 768px) {
+      .container {
+        grid-template-columns: 1fr;
+        padding: 0 10px;
+      }
+      
+      h1 {
+        font-size: 2em;
+      }
+      
+      .api-status {
+        position: relative;
+        top: auto;
+        right: auto;
+        margin-bottom: 20px;
+      }
+    }
   </style>
 </head>
 <body>
+  <div id="apiStatus" class="api-status offline">🔴 API Offline</div>
+  
   <h1>🔑 ModX Key System - Admin Panel</h1>
   
   <div class="container">
+    <!-- Generate Key Card -->
     <div class="card">
       <h3>🔧 Generate New Key</h3>
-      <input type="text" id="genHwid" placeholder="Enter Hardware ID (HWID)">
+      <input type="text" id="genHwid" placeholder="Enter Hardware ID (HWID)" maxlength="64">
       <button onclick="generateKey()" id="genBtn">Generate Key</button>
       <div id="genResult" class="result-box"></div>
     </div>
 
+    <!-- API Status & Stats Card -->
     <div class="card">
-      <h3>👀 View All Keys</h3>
-      <button onclick="viewKeys()" id="viewBtn">Load All Keys</button>
-      <div id="keysList" class="result-box"></div>
+      <h3>📊 System Statistics</h3>
+      <button onclick="refreshStats()" id="statsBtn">Refresh Stats</button>
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="stat-value" id="totalKeys">-</div>
+          <div class="stat-label">Total Keys</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="activeKeys">-</div>
+          <div class="stat-label">Active</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="inactiveKeys">-</div>
+          <div class="stat-label">Inactive</div>
+        </div>
+      </div>
+      <div id="statsResult" class="result-box"></div>
     </div>
 
+    <!-- Verify Key Card -->
     <div class="card">
       <h3>✅ Verify Key</h3>
       <input type="text" id="verifyKey" placeholder="Enter Key to Verify">
@@ -171,123 +317,165 @@
       <div id="verifyResult" class="result-box"></div>
     </div>
 
+    <!-- Key Management Card -->
     <div class="card">
-      <h3>🔄 Toggle Key Status</h3>
-      <input type="text" id="toggleKeyInput" placeholder="Enter Key to Toggle">
-      <button onclick="toggleKey()" id="toggleBtn">Toggle Active/Inactive</button>
-      <div id="toggleResult" class="result-box"></div>
+      <h3>🔄 Key Management</h3>
+      <input type="text" id="manageKeyInput" placeholder="Enter Key to Manage">
+      <div style="display: flex; gap: 10px;">
+        <button onclick="toggleKey()" id="toggleBtn" style="flex: 1;">Toggle Status</button>
+        <button onclick="deleteKey()" id="deleteBtn" class="btn-danger" style="flex: 1;">Delete Key</button>
+      </div>
+      <div id="manageResult" class="result-box"></div>
     </div>
 
-    <div class="card">
-      <h3>🗑️ Delete Key</h3>
-      <input type="text" id="deleteKeyInput" placeholder="Enter Key to Delete">
-      <button onclick="deleteKey()" id="deleteBtn">Delete Key</button>
-      <div id="deleteResult" class="result-box"></div>
-    </div>
-
-    <div class="card">
-      <h3>📡 API Status</h3>
-      <button onclick="checkApiStatus()" id="statusBtn">Check API Status</button>
-      <div id="apiStatus" class="result-box"></div>
+    <!-- View All Keys Card -->
+    <div class="card" style="grid-column: 1 / -1;">
+      <h3>👀 All Keys</h3>
+      <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px;">
+        <button onclick="viewKeys()" id="viewBtn" style="flex: 1;">Load All Keys</button>
+        <select id="filterStatus" onchange="filterKeys()" style="flex: 1; max-width: 150px;">
+          <option value="all">All Keys</option>
+          <option value="active">Active Only</option>
+          <option value="inactive">Inactive Only</option>
+        </select>
+        <input type="text" id="searchKeys" placeholder="Search keys..." onkeyup="searchKeys()" style="flex: 2;">
+      </div>
+      <div id="keysList" class="result-box" style="max-height: 400px;"></div>
     </div>
   </div>
 
   <script>
     const BASE_URL = "https://key-system-eight.vercel.app";
+    let allKeys = {};
+    let filteredKeys = {};
     
-    function showLoading(buttonId) {
+    // Utility Functions
+    function showLoading(buttonId, loadingText = 'Processing...') {
       const btn = document.getElementById(buttonId);
+      const originalText = btn.textContent;
       btn.disabled = true;
-      btn.innerHTML = '<span class="loading"></span> Processing...';
+      btn.innerHTML = `<span class="loading"></span> ${loadingText}`;
+      btn.setAttribute('data-original-text', originalText);
     }
     
-    function hideLoading(buttonId, originalText) {
+    function hideLoading(buttonId) {
       const btn = document.getElementById(buttonId);
       btn.disabled = false;
-      btn.innerHTML = originalText;
+      btn.innerHTML = btn.getAttribute('data-original-text') || 'Button';
     }
     
-    function showResult(elementId, content, isError = false) {
+    function showResult(elementId, content, type = 'info') {
       const element = document.getElementById(elementId);
       element.innerHTML = content;
-      element.style.color = isError ? '#ef4444' : '#22c55e';
+      element.className = `result-box ${type}`;
+      
+      // Auto-clear after 30 seconds for non-error messages
+      if (type !== 'error') {
+        setTimeout(() => {
+          if (element.innerHTML === content) {
+            element.innerHTML = '';
+            element.className = 'result-box';
+          }
+        }, 30000);
+      }
     }
     
-    function formatJson(obj) {
-      return JSON.stringify(obj, null, 2);
+    function updateApiStatus(isOnline, message = '') {
+      const statusElement = document.getElementById('apiStatus');
+      if (isOnline) {
+        statusElement.className = 'api-status online';
+        statusElement.innerHTML = '🟢 API Online';
+      } else {
+        statusElement.className = 'api-status offline';
+        statusElement.innerHTML = '🔴 API Offline' + (message ? ` - ${message}` : '');
+      }
+    }
+    
+    function formatTimestamp(timestamp) {
+      if (!timestamp) return 'Never';
+      return new Date(timestamp).toLocaleString();
+    }
+    
+    function copyToClipboard(text, buttonElement) {
+      navigator.clipboard.writeText(text).then(() => {
+        const originalText = buttonElement.textContent;
+        buttonElement.textContent = '✅ Copied!';
+        buttonElement.style.background = '#22c55e';
+        setTimeout(() => {
+          buttonElement.textContent = originalText;
+          buttonElement.style.background = '';
+        }, 2000);
+      }).catch(() => {
+        alert('Failed to copy to clipboard');
+      });
+    }
+
+    // API Functions
+    async function makeApiCall(endpoint, method = 'GET', body = null) {
+      try {
+        const options = {
+          method,
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          }
+        };
+        
+        if (body && method !== 'GET') {
+          options.body = JSON.stringify(body);
+        }
+        
+        const response = await fetch(`${BASE_URL}/api/${endpoint}`, options);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        updateApiStatus(true);
+        return { success: true, data };
+        
+      } catch (error) {
+        console.error('API call failed:', error);
+        updateApiStatus(false, error.message);
+        return { success: false, error: error.message };
+      }
     }
 
     async function generateKey() {
       const hwid = document.getElementById('genHwid').value.trim();
       if (!hwid) {
-        showResult('genResult', 'Error: Please enter a valid HWID', true);
+        showResult('genResult', '❌ Error: Please enter a valid HWID', 'error');
         return;
       }
       
-      showLoading('genBtn');
-      
-      try {
-         const response = await fetch(`${BASE_URL}/api/generate-key`, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          body: JSON.stringify({ hwid })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-          showResult('genResult', `✅ Success!\n\nGenerated Key: ${data.key}\nHWID: ${data.hwid}\nStatus: ${data.enabled ? 'Active' : 'Inactive'}\nGenerated: ${new Date().toLocaleString()}`);
-          document.getElementById('genHwid').value = '';
-        } else {
-          showResult('genResult', `❌ Error: ${data.error || 'Unknown error'}`, true);
-        }
-      } catch (error) {
-        showResult('genResult', `❌ Network Error: ${error.message}`, true);
-      } finally {
-        hideLoading('genBtn', 'Generate Key');
+      if (hwid.length < 8) {
+        showResult('genResult', '❌ Error: HWID must be at least 8 characters long', 'error');
+        return;
       }
-    }
-
-    async function viewKeys() {
-      showLoading('viewBtn');
       
-      try {
-        const response = await fetch(`${BASE_URL}/api/get-keys`, {
-          method: 'GET',
-          headers: { 'Accept': 'application/json' }
-        });
+      showLoading('genBtn', 'Generating...');
+      
+      const result = await makeApiCall('generate-key', 'POST', { hwid });
+      
+      if (result.success && result.data.success) {
+        const data = result.data;
+        showResult('genResult', 
+          `✅ Success! Key Generated\n\n` +
+          `Key: ${data.key}\n` +
+          `HWID: ${data.hwid}\n` +
+          `Status: ${data.enabled ? 'Active' : 'Inactive'}\n` +
+          `Generated: ${formatTimestamp(Date.now())}\n\n` +
+          `${data.message}`, 'success');
         
-        const data = await response.json();
-        
-        if (data.success) {
-          const keys = data.keys;
-          const keyCount = Object.keys(keys).length;
-          
-          if (keyCount === 0) {
-            showResult('keysList', '📝 No keys found in the system.');
-          } else {
-            let output = `📊 Found ${keyCount} key(s):\n\n`;
-            
-            Object.entries(keys).forEach(([key, info], index) => {
-              output += `${index + 1}. Key: ${key}\n`;
-              output += `   HWID: ${info.hwid}\n`;
-              output += `   Status: ${info.enabled ? '✅ Active' : '❌ Inactive'}\n`;
-              output += `   Generated: ${new Date(info.generated_at).toLocaleString()}\n\n`;
-            });
-            
-            showResult('keysList', output);
-          }
-        } else {
-          showResult('keysList', `❌ Error: ${data.error || 'Failed to fetch keys'}`, true);
-        }
-      } catch (error) {
-        showResult('keysList', `❌ Network Error: ${error.message}`, true);
-      } finally {
-        hideLoading('viewBtn', 'Load All Keys');
+        document.getElementById('genHwid').value = '';
+        refreshStats(); // Auto-refresh stats
+      } else {
+        const errorMsg = result.data?.error || result.error || 'Unknown error occurred';
+        showResult('genResult', `❌ Error: ${errorMsg}`, 'error');
       }
+      
+      hideLoading('genBtn');
     }
 
     async function verifyKey() {
@@ -295,135 +483,264 @@
       const hwid = document.getElementById('verifyHwid').value.trim();
       
       if (!key || !hwid) {
-        showResult('verifyResult', 'Error: Please enter both key and HWID', true);
+        showResult('verifyResult', '❌ Error: Please enter both key and HWID', 'error');
         return;
       }
       
-      showLoading('verifyBtn');
+      showLoading('verifyBtn', 'Verifying...');
       
-      try {
-        const response = await fetch(`${BASE_URL}/api/verify-key`, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          body: JSON.stringify({ key, hwid })
-        });
-        
-        const data = await response.json();
-        
+      const result = await makeApiCall('verify-key', 'POST', { key, hwid });
+      
+      if (result.success) {
+        const data = result.data;
         if (data.valid) {
-          showResult('verifyResult', `✅ Key is VALID!\n\nMessage: ${data.message}\nKey: ${key}\nHWID: ${hwid}`);
+          showResult('verifyResult', 
+            `✅ KEY IS VALID!\n\n` +
+            `Key: ${key}\n` +
+            `HWID: ${hwid}\n` +
+            `Status: Active\n` +
+            `Message: ${data.message}`, 'success');
         } else {
-          showResult('verifyResult', `❌ Key is INVALID!\n\nReason: ${data.error}\nKey: ${key}\nHWID: ${hwid}`, true);
+          showResult('verifyResult', 
+            `❌ KEY IS INVALID!\n\n` +
+            `Key: ${key}\n` +
+            `HWID: ${hwid}\n` +
+            `Reason: ${data.error}`, 'error');
         }
         
         document.getElementById('verifyKey').value = '';
         document.getElementById('verifyHwid').value = '';
-      } catch (error) {
-        showResult('verifyResult', `❌ Network Error: ${error.message}`, true);
-      } finally {
-        hideLoading('verifyBtn', 'Verify Key');
+      } else {
+        showResult('verifyResult', `❌ Verification Failed: ${result.error}`, 'error');
       }
+      
+      hideLoading('verifyBtn');
     }
 
     async function toggleKey() {
-      const key = document.getElementById('toggleKeyInput').value.trim();
+      const key = document.getElementById('manageKeyInput').value.trim();
       if (!key) {
-        showResult('toggleResult', 'Error: Please enter a key', true);
+        showResult('manageResult', '❌ Error: Please enter a key', 'error');
         return;
       }
       
-      showLoading('toggleBtn');
+      showLoading('toggleBtn', 'Toggling...');
       
-      try {
-        const response = await fetch(`${BASE_URL}/api/toggle-key`, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          body: JSON.stringify({ key })
-        });
+      const result = await makeApiCall('toggle-key', 'POST', { key });
+      
+      if (result.success && result.data.success) {
+        const data = result.data;
+        showResult('manageResult', 
+          `✅ Key Status Updated!\n\n` +
+          `Key: ${data.key}\n` +
+          `New Status: ${data.enabled ? '✅ Active' : '❌ Inactive'}\n` +
+          `Message: ${data.message}`, 'success');
         
-        const data = await response.json();
-        
-        if (data.success) {
-          showResult('toggleResult', `✅ Success!\n\nKey: ${data.key}\nNew Status: ${data.enabled ? '✅ Active' : '❌ Inactive'}`);
-          document.getElementById('toggleKeyInput').value = '';
-        } else {
-          showResult('toggleResult', `❌ Error: ${data.error || 'Failed to toggle key'}`, true);
+        refreshStats(); // Auto-refresh stats
+        if (Object.keys(allKeys).length > 0) {
+          viewKeys(); // Refresh key list if it's loaded
         }
-      } catch (error) {
-        showResult('toggleResult', `❌ Network Error: ${error.message}`, true);
-      } finally {
-        hideLoading('toggleBtn', 'Toggle Active/Inactive');
+      } else {
+        const errorMsg = result.data?.error || result.error || 'Unknown error occurred';
+        showResult('manageResult', `❌ Toggle Failed: ${errorMsg}`, 'error');
       }
+      
+      hideLoading('toggleBtn');
     }
 
-    // Delete Key
     async function deleteKey() {
-      const key = document.getElementById('deleteKeyInput').value.trim();
+      const key = document.getElementById('manageKeyInput').value.trim();
       if (!key) {
-        showResult('deleteResult', 'Error: Please enter a key', true);
+        showResult('manageResult', '❌ Error: Please enter a key', 'error');
         return;
       }
       
-      if (!confirm(`Are you sure you want to delete the key: ${key}?`)) {
+      if (!confirm(`Are you sure you want to DELETE the key: ${key}?\n\nThis action cannot be undone!`)) {
         return;
       }
       
-      showLoading('deleteBtn');
+      showLoading('deleteBtn', 'Deleting...');
       
-      try {
-        const response = await fetch(`${BASE_URL}/api/delete-key`, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          body: JSON.stringify({ key })
-        });
+      const result = await makeApiCall('delete-key', 'POST', { key });
+      
+      if (result.success && result.data.success) {
+        const data = result.data;
+        showResult('manageResult', 
+          `✅ Key Deleted Successfully!\n\n` +
+          `Deleted Key: ${data.deleted_key}\n` +
+          `Associated HWID: ${data.deleted_hwid}\n` +
+          `Message: ${data.message}`, 'success');
         
-        const data = await response.json();
-        
-        if (data.success) {
-          showResult('deleteResult', `✅ Success!\n\nDeleted Key: ${key}`);
-          document.getElementById('deleteKeyInput').value = '';
-        } else {
-          showResult('deleteResult', `❌ Error: ${data.error || 'Failed to delete key'}`, true);
+        document.getElementById('manageKeyInput').value = '';
+        refreshStats(); // Auto-refresh stats
+        if (Object.keys(allKeys).length > 0) {
+          viewKeys(); // Refresh key list if it's loaded
         }
-      } catch (error) {
-        showResult('deleteResult', `❌ Network Error: ${error.message}`, true);
-      } finally {
-        hideLoading('deleteBtn', 'Delete Key');
+      } else {
+        const errorMsg = result.data?.error || result.error || 'Unknown error occurred';
+        showResult('manageResult', `❌ Delete Failed: ${errorMsg}`, 'error');
       }
+      
+      hideLoading('deleteBtn');
     }
 
-    async function checkApiStatus() {
-      showLoading('statusBtn');
+    async function viewKeys() {
+      showLoading('viewBtn', 'Loading...');
       
-      try {
-        const response = await fetch(`${BASE_URL}/api/status`, {
-          method: 'GET',
-          headers: { 'Accept': 'application/json' }
-        });
+      const result = await makeApiCall('get-keys', 'GET');
+      
+      if (result.success && result.data.success) {
+        allKeys = result.data.keys || {};
+        filteredKeys = { ...allKeys };
+        displayKeys();
         
-        if (response.ok) {
-          showResult('apiStatus', `✅ API is Online!\n\nStatus Code: ${response.status}\nServer Time: ${new Date().toLocaleString()}`);
-        } else {
-          showResult('apiStatus', `⚠️ API returned status: ${response.status}`, true);
+        const keyCount = Object.keys(allKeys).length;
+        if (keyCount === 0) {
+          showResult('keysList', '📝 No keys found in the system.', 'info');
         }
-      } catch (error) {
-        showResult('apiStatus', `❌ API is Offline!\n\nError: ${error.message}`, true);
-      } finally {
-        hideLoading('statusBtn', 'Check API Status');
+      } else {
+        const errorMsg = result.data?.error || result.error || 'Unknown error occurred';
+        showResult('keysList', `❌ Failed to load keys: ${errorMsg}`, 'error');
+        allKeys = {};
+        filteredKeys = {};
       }
+      
+      hideLoading('viewBtn');
     }
 
-    window.addEventListener('load', () => {
-      checkApiStatus();
+    function displayKeys() {
+      const keysList = document.getElementById('keysList');
+      const keys = filteredKeys;
+      const keyCount = Object.keys(keys).length;
+      
+      if (keyCount === 0) {
+        keysList.innerHTML = '📝 No keys match your current filter.';
+        keysList.className = 'result-box';
+        return;
+      }
+      
+      let html = `<div style="margin-bottom: 15px; color: #38bdf8; font-weight: bold;">Showing ${keyCount} key(s):</div>`;
+      
+      Object.entries(keys).forEach(([key, info]) => {
+        const isActive = info.enabled;
+        const statusColor = isActive ? '#22c55e' : '#ef4444';
+        const statusText = isActive ? '✅ Active' : '❌ Inactive';
+        
+        html += `
+          <div class="key-item ${isActive ? '' : 'inactive'}">
+            <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 8px;">
+              <strong style="color: ${statusColor};">${key}</strong>
+              <span style="color: ${statusColor}; font-size: 12px;">${statusText}</span>
+            </div>
+            <div style="font-size: 11px; color: #94a3b8; line-height: 1.4;">
+              <div>HWID: <span style="font-family: monospace;">${info.hwid}</span></div>
+              <div>Generated: ${formatTimestamp(info.generated_at)}</div>
+              <div>Last Used: ${formatTimestamp(info.last_used)}</div>
+              <div>Last Modified: ${formatTimestamp(info.last_modified)}</div>
+            </div>
+            <div class="key-actions">
+              <button onclick="copyToClipboard('${key}', this)" class="copy-btn">Copy Key</button>
+              <button onclick="copyToClipboard('${info.hwid}', this)" class="copy-btn">Copy HWID</button>
+              <button onclick="quickToggle('${key}')" style="background: ${isActive ? '#ef4444' : '#22c55e'};">
+                ${isActive ? 'Disable' : 'Enable'}
+              </button>
+              <button onclick="quickDelete('${key}')" class="btn-danger">Delete</button>
+            </div>
+          </div>
+        `;
+      });
+      
+      keysList.innerHTML = html;
+      keysList.className = 'result-box success';
+    }
+
+    async function refreshStats() {
+      showLoading('statsBtn', 'Loading...');
+      
+      const result = await makeApiCall('status', 'GET');
+      
+      if (result.success && result.data.success) {
+        const stats = result.data.statistics;
+        document.getElementById('totalKeys').textContent = stats.total_keys || 0;
+        document.getElementById('activeKeys').textContent = stats.active_keys || 0;
+        document.getElementById('inactiveKeys').textContent = stats.inactive_keys || 0;
+        
+        showResult('statsResult', 
+          `✅ Stats Updated\n\n` +
+          `Server Status: ${result.data.status}\n` +
+          `Version: ${result.data.version}\n` +
+          `Last Updated: ${formatTimestamp(Date.now())}`, 'success');
+      } else {
+        document.getElementById('totalKeys').textContent = '?';
+        document.getElementById('activeKeys').textContent = '?';
+        document.getElementById('inactiveKeys').textContent = '?';
+        
+        const errorMsg = result.error || 'Unknown error occurred';
+        showResult('statsResult', `❌ Failed to load stats: ${errorMsg}`, 'error');
+      }
+      
+      hideLoading('statsBtn');
+    }
+
+    function filterKeys() {
+      const filterValue = document.getElementById('filterStatus').value;
+      const searchTerm = document.getElementById('searchKeys').value.toLowerCase();
+      
+      filteredKeys = {};
+      
+      Object.entries(allKeys).forEach(([key, info]) => {
+        // Apply status filter
+        let includeByStatus = false;
+        if (filterValue === 'all') includeByStatus = true;
+        else if (filterValue === 'active' && info.enabled) includeByStatus = true;
+        else if (filterValue === 'inactive' && !info.enabled) includeByStatus = true;
+        
+        // Apply search filter
+        let includeBySearch = false;
+        if (!searchTerm) includeBySearch = true;
+        else if (key.toLowerCase().includes(searchTerm) || info.hwid.toLowerCase().includes(searchTerm)) {
+          includeBySearch = true;
+        }
+        
+        if (includeByStatus && includeBySearch) {
+          filteredKeys[key] = info;
+        }
+      });
+      
+      displayKeys();
+    }
+
+    function searchKeys() {
+      filterKeys();
+    }
+
+    async function quickToggle(key) {
+      document.getElementById('manageKeyInput').value = key;
+      await toggleKey();
+      document.getElementById('manageKeyInput').value = '';
+    }
+
+    async function quickDelete(key) {
+      document.getElementById('manageKeyInput').value = key;
+      await deleteKey();
+      document.getElementById('manageKeyInput').value = '';
+    }
+
+    // Initialize on page load
+    window.addEventListener('load', async () => {
+      console.log('ModX Admin Panel Loaded');
+      await refreshStats();
+      
+      // Auto-refresh stats every 30 seconds
+      setInterval(refreshStats, 30000);
+    });
+
+    // Add keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.key === 'r') {
+        e.preventDefault();
+        refreshStats();
+      }
     });
   </script>
 </body>
