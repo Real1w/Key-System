@@ -1,28 +1,19 @@
-// api/generate-key.js
-const { getKeys, setKeys, generateKey, normalizeHWID } = require('./lib/memoryDB');
+import { addKey } from "./_db";
 
-module.exports = function (req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+export default function handler(req, res) {
+  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-  if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ success: false, error: 'Method not allowed' });
+  const { hwid } = req.body;
+  if (!hwid) return res.json({ success: false, error: "HWID required" });
 
-  try {
-    const { hwid } = req.body || {};
-    if (!hwid) return res.status(400).json({ success: false, error: 'HWID required' });
+  const newKey = "ModX" + Math.floor(Math.random() * 1e18);
 
-    const keys = getKeys();
-    const key = generateKey();
-    const normalized = normalizeHWID(hwid);
+  addKey(newKey, hwid);
 
-    keys[key] = { hwid: normalized, generated_at: new Date().toISOString(), enabled: true };
-    setKeys(keys);
-
-    return res.status(200).json({ success: true, key, hwid: normalized, enabled: true });
-  } catch (err) {
-    console.error('generate-key error', err);
-    return res.status(500).json({ success: false, error: 'Internal server error' });
-  }
-};
+  return res.json({
+    success: true,
+    key: newKey,
+    hwid,
+    enabled: true
+  });
+}
