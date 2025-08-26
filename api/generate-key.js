@@ -12,6 +12,7 @@ if (Object.keys(keys).length === 0) {
 }
 
 export default function handler(req, res) {
+  // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -37,6 +38,7 @@ export default function handler(req, res) {
     });
   }
 
+  // Check if HWID already has a key
   const existingKey = Object.keys(keys).find(key => keys[key].hwid === hwid);
   if (existingKey) {
     return res.json({
