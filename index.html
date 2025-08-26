@@ -5,134 +5,428 @@
   <title>ModX Key System - Admin Panel</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #0f172a;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
       color: #e2e8f0;
       display: flex;
       flex-direction: column;
       align-items: center;
       padding: 40px;
+      min-height: 100vh;
+      margin: 0;
     }
+    
     h1 {
       color: #38bdf8;
+      text-align: center;
+      font-size: 2.5em;
+      margin-bottom: 30px;
+      text-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
     }
-    .card {
-      background: #1e293b;
-      padding: 20px;
-      border-radius: 12px;
-      margin: 15px;
-      width: 400px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-    }
-    input, button {
+    
+    .container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 20px;
+      max-width: 1200px;
       width: 100%;
-      padding: 10px;
-      margin: 8px 0;
-      border-radius: 6px;
-      border: none;
-      font-size: 14px;
     }
-    input {
-      background: #334155;
+    
+    .card {
+      background: rgba(30, 41, 59, 0.8);
+      padding: 25px;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(56, 189, 248, 0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+    }
+    
+    .card h3 {
+      color: #38bdf8;
+      margin-top: 0;
+      font-size: 1.3em;
+      border-bottom: 2px solid rgba(56, 189, 248, 0.3);
+      padding-bottom: 10px;
+    }
+    
+    input, button, textarea {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      font-size: 14px;
+      transition: all 0.3s ease;
+      box-sizing: border-box;
+    }
+    
+    input, textarea {
+      background: rgba(51, 65, 85, 0.8);
       color: #e2e8f0;
     }
+    
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: #38bdf8;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+    }
+    
     button {
-      background: #38bdf8;
+      background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
       color: #0f172a;
       font-weight: bold;
       cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
+    
     button:hover {
-      background: #0ea5e9;
+      background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(56, 189, 248, 0.4);
     }
-    pre {
-      background: #0f172a;
-      padding: 10px;
-      border-radius: 6px;
+    
+    button:disabled {
+      background: #374151;
+      color: #9ca3af;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .result-box {
+      background: rgba(15, 23, 42, 0.9);
+      padding: 15px;
+      border-radius: 8px;
       overflow-x: auto;
       max-height: 300px;
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      line-height: 1.4;
+      white-space: pre-wrap;
+    }
+    
+    .status {
+      padding: 10px;
+      border-radius: 6px;
+      margin: 10px 0;
+      font-weight: bold;
+    }
+    
+    .success {
+      background: rgba(34, 197, 94, 0.2);
+      color: #22c55e;
+      border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+    
+    .error {
+      background: rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+    
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(56, 189, 248, 0.3);
+      border-radius: 50%;
+      border-top-color: #38bdf8;
+      animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
   </style>
 </head>
 <body>
-  <h1>🔑 ModX Admin Panel</h1>
+  <h1>🔑 ModX Key System - Admin Panel</h1>
+  
+  <div class="container">
+    <div class="card">
+      <h3>🔧 Generate New Key</h3>
+      <input type="text" id="genHwid" placeholder="Enter Hardware ID (HWID)">
+      <button onclick="generateKey()" id="genBtn">Generate Key</button>
+      <div id="genResult" class="result-box"></div>
+    </div>
 
-  <!-- Generate Key -->
-  <div class="card">
-    <h3>Generate Key</h3>
-    <input type="text" id="genHwid" placeholder="Enter HWID">
-    <button onclick="generateKey()">Generate</button>
-    <pre id="genResult"></pre>
-  </div>
+    <div class="card">
+      <h3>👀 View All Keys</h3>
+      <button onclick="viewKeys()" id="viewBtn">Load All Keys</button>
+      <div id="keysList" class="result-box"></div>
+    </div>
 
-  <!-- View Keys -->
-  <div class="card">
-    <h3>View All Keys</h3>
-    <button onclick="viewKeys()">Load Keys</button>
-    <pre id="keysList"></pre>
-  </div>
+    <div class="card">
+      <h3>✅ Verify Key</h3>
+      <input type="text" id="verifyKey" placeholder="Enter Key to Verify">
+      <input type="text" id="verifyHwid" placeholder="Enter HWID for Verification">
+      <button onclick="verifyKey()" id="verifyBtn">Verify Key</button>
+      <div id="verifyResult" class="result-box"></div>
+    </div>
 
-  <!-- Toggle Key -->
-  <div class="card">
-    <h3>Toggle Key (Active/Inactive)</h3>
-    <input type="text" id="toggleKey" placeholder="Enter Key">
-    <button onclick="toggleKey()">Toggle</button>
-    <pre id="toggleResult"></pre>
-  </div>
+    <div class="card">
+      <h3>🔄 Toggle Key Status</h3>
+      <input type="text" id="toggleKeyInput" placeholder="Enter Key to Toggle">
+      <button onclick="toggleKey()" id="toggleBtn">Toggle Active/Inactive</button>
+      <div id="toggleResult" class="result-box"></div>
+    </div>
 
-  <!-- Delete Key -->
-  <div class="card">
-    <h3>Delete Key</h3>
-    <input type="text" id="deleteKey" placeholder="Enter Key">
-    <button onclick="deleteKey()">Delete</button>
-    <pre id="deleteResult"></pre>
+    <div class="card">
+      <h3>🗑️ Delete Key</h3>
+      <input type="text" id="deleteKeyInput" placeholder="Enter Key to Delete">
+      <button onclick="deleteKey()" id="deleteBtn">Delete Key</button>
+      <div id="deleteResult" class="result-box"></div>
+    </div>
+
+    <div class="card">
+      <h3>📡 API Status</h3>
+      <button onclick="checkApiStatus()" id="statusBtn">Check API Status</button>
+      <div id="apiStatus" class="result-box"></div>
+    </div>
   </div>
 
   <script>
     const BASE_URL = "https://key-system-eight.vercel.app";
+    
+    function showLoading(buttonId) {
+      const btn = document.getElementById(buttonId);
+      btn.disabled = true;
+      btn.innerHTML = '<span class="loading"></span> Processing...';
+    }
+    
+    function hideLoading(buttonId, originalText) {
+      const btn = document.getElementById(buttonId);
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
+    
+    function showResult(elementId, content, isError = false) {
+      const element = document.getElementById(elementId);
+      element.innerHTML = content;
+      element.style.color = isError ? '#ef4444' : '#22c55e';
+    }
+    
+    function formatJson(obj) {
+      return JSON.stringify(obj, null, 2);
+    }
 
     // Generate Key
     async function generateKey() {
-      const hwid = document.getElementById('genHwid').value;
-      if (!hwid) return alert('Please enter HWID');
-      const res = await fetch(`${BASE_URL}/api/generate-key`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ hwid })
-      });
-      document.getElementById('genResult').textContent = await res.text();
+      const hwid = document.getElementById('genHwid').value.trim();
+      if (!hwid) {
+        showResult('genResult', 'Error: Please enter a valid HWID', true);
+        return;
+      }
+      
+      showLoading('genBtn');
+      
+      try {
+        const response = await fetch(`${BASE_URL}/api/generate-key`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({ hwid })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          showResult('genResult', `✅ Success!\n\nGenerated Key: ${data.key}\nHWID: ${data.hwid}\nStatus: ${data.enabled ? 'Active' : 'Inactive'}\nGenerated: ${new Date().toLocaleString()}`);
+          document.getElementById('genHwid').value = '';
+        } else {
+          showResult('genResult', `❌ Error: ${data.error || 'Unknown error'}`, true);
+        }
+      } catch (error) {
+        showResult('genResult', `❌ Network Error: ${error.message}`, true);
+      } finally {
+        hideLoading('genBtn', 'Generate Key');
+      }
     }
 
-    // View All Keys
     async function viewKeys() {
-      const res = await fetch(`${BASE_URL}/api/get-keys`);
-      const data = await res.json();
-      document.getElementById('keysList').textContent = JSON.stringify(data, null, 2);
+      showLoading('viewBtn');
+      
+      try {
+        const response = await fetch(`${BASE_URL}/api/get-keys`, {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          const keys = data.keys;
+          const keyCount = Object.keys(keys).length;
+          
+          if (keyCount === 0) {
+            showResult('keysList', '📝 No keys found in the system.');
+          } else {
+            let output = `📊 Found ${keyCount} key(s):\n\n`;
+            
+            Object.entries(keys).forEach(([key, info], index) => {
+              output += `${index + 1}. Key: ${key}\n`;
+              output += `   HWID: ${info.hwid}\n`;
+              output += `   Status: ${info.enabled ? '✅ Active' : '❌ Inactive'}\n`;
+              output += `   Generated: ${new Date(info.generated_at).toLocaleString()}\n\n`;
+            });
+            
+            showResult('keysList', output);
+          }
+        } else {
+          showResult('keysList', `❌ Error: ${data.error || 'Failed to fetch keys'}`, true);
+        }
+      } catch (error) {
+        showResult('keysList', `❌ Network Error: ${error.message}`, true);
+      } finally {
+        hideLoading('viewBtn', 'Load All Keys');
+      }
     }
 
-    // Toggle Key
+    // Verify Key
+    async function verifyKey() {
+      const key = document.getElementById('verifyKey').value.trim();
+      const hwid = document.getElementById('verifyHwid').value.trim();
+      
+      if (!key || !hwid) {
+        showResult('verifyResult', 'Error: Please enter both key and HWID', true);
+        return;
+      }
+      
+      showLoading('verifyBtn');
+      
+      try {
+        const response = await fetch(`${BASE_URL}/api/verify-key`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({ key, hwid })
+        });
+        
+        const data = await response.json();
+        
+        if (data.valid) {
+          showResult('verifyResult', `✅ Key is VALID!\n\nMessage: ${data.message}\nKey: ${key}\nHWID: ${hwid}`);
+        } else {
+          showResult('verifyResult', `❌ Key is INVALID!\n\nReason: ${data.error}\nKey: ${key}\nHWID: ${hwid}`, true);
+        }
+        
+        document.getElementById('verifyKey').value = '';
+        document.getElementById('verifyHwid').value = '';
+      } catch (error) {
+        showResult('verifyResult', `❌ Network Error: ${error.message}`, true);
+      } finally {
+        hideLoading('verifyBtn', 'Verify Key');
+      }
+    }
+
     async function toggleKey() {
-      const key = document.getElementById('toggleKey').value;
-      if (!key) return alert('Enter key');
-      const res = await fetch(`${BASE_URL}/api/toggle-key`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ key })
-      });
-      document.getElementById('toggleResult').textContent = await res.text();
+      const key = document.getElementById('toggleKeyInput').value.trim();
+      if (!key) {
+        showResult('toggleResult', 'Error: Please enter a key', true);
+        return;
+      }
+      
+      showLoading('toggleBtn');
+      
+      try {
+        const response = await fetch(`${BASE_URL}/api/toggle-key`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({ key })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          showResult('toggleResult', `✅ Success!\n\nKey: ${data.key}\nNew Status: ${data.enabled ? '✅ Active' : '❌ Inactive'}`);
+          document.getElementById('toggleKeyInput').value = '';
+        } else {
+          showResult('toggleResult', `❌ Error: ${data.error || 'Failed to toggle key'}`, true);
+        }
+      } catch (error) {
+        showResult('toggleResult', `❌ Network Error: ${error.message}`, true);
+      } finally {
+        hideLoading('toggleBtn', 'Toggle Active/Inactive');
+      }
     }
 
     // Delete Key
     async function deleteKey() {
-      const key = document.getElementById('deleteKey').value;
-      if (!key) return alert('Enter key');
-      const res = await fetch(`${BASE_URL}/api/delete-key`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ key })
-      });
-      document.getElementById('deleteResult').textContent = await res.text();
+      const key = document.getElementById('deleteKeyInput').value.trim();
+      if (!key) {
+        showResult('deleteResult', 'Error: Please enter a key', true);
+        return;
+      }
+      
+      if (!confirm(`Are you sure you want to delete the key: ${key}?`)) {
+        return;
+      }
+      
+      showLoading('deleteBtn');
+      
+      try {
+        const response = await fetch(`${BASE_URL}/api/delete-key`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({ key })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          showResult('deleteResult', `✅ Success!\n\nDeleted Key: ${key}`);
+          document.getElementById('deleteKeyInput').value = '';
+        } else {
+          showResult('deleteResult', `❌ Error: ${data.error || 'Failed to delete key'}`, true);
+        }
+      } catch (error) {
+        showResult('deleteResult', `❌ Network Error: ${error.message}`, true);
+      } finally {
+        hideLoading('deleteBtn', 'Delete Key');
+      }
     }
+
+    async function checkApiStatus() {
+      showLoading('statusBtn');
+      
+      try {
+        const response = await fetch(`${BASE_URL}/api/status`, {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' }
+        });
+        
+        if (response.ok) {
+          showResult('apiStatus', `✅ API is Online!\n\nStatus Code: ${response.status}\nServer Time: ${new Date().toLocaleString()}`);
+        } else {
+          showResult('apiStatus', `⚠️ API returned status: ${response.status}`, true);
+        }
+      } catch (error) {
+        showResult('apiStatus', `❌ API is Offline!\n\nError: ${error.message}`, true);
+      } finally {
+        hideLoading('statusBtn', 'Check API Status');
+      }
+    }
+
+    window.addEventListener('load', () => {
+      checkApiStatus();
+    });
   </script>
 </body>
 </html>
