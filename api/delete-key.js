@@ -1,7 +1,6 @@
 import { keys } from "./generate-key.js";
 
 export default function handler(req, res) {
-  // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -27,7 +26,6 @@ export default function handler(req, res) {
     });
   }
 
-  // Check if key exists
   if (!keys[key]) {
     return res.status(404).json({ 
       success: false, 
@@ -35,12 +33,9 @@ export default function handler(req, res) {
     });
   }
 
-  // Store key info before deletion for logging
   const keyInfo = { ...keys[key] };
   
-  // Delete the key
   delete keys[key];
-
   console.log(`Deleted key ${key} with HWID ${keyInfo.hwid}`);
 
   res.json({ 
