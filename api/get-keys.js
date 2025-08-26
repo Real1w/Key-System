@@ -20,7 +20,7 @@ export default function handler(req, res) {
   try {
     const keyCount = Object.keys(keys).length;
     console.log(`Returning ${keyCount} keys`);
-
+    
     res.json({ 
       success: true, 
       keys: keys,
