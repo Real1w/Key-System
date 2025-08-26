@@ -193,7 +193,7 @@
   </div>
 
   <script>
-    const BASE_URL = "https://key-system-eight.vercel.app";
+    const BASE_URL = "";
     
     function showLoading(buttonId) {
       const btn = document.getElementById(buttonId);
@@ -217,7 +217,6 @@
       return JSON.stringify(obj, null, 2);
     }
 
-    // Generate Key
     async function generateKey() {
       const hwid = document.getElementById('genHwid').value.trim();
       if (!hwid) {
@@ -291,7 +290,6 @@
       }
     }
 
-    // Verify Key
     async function verifyKey() {
       const key = document.getElementById('verifyKey').value.trim();
       const hwid = document.getElementById('verifyHwid').value.trim();
