@@ -1,28 +1,14 @@
-const { getKeys, normalizeHWID } = require('./lib/memoryDB');
+import { getKey } from "./_db";
 
-module.exports = function (req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+export default function handler(req, res) {
+  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-  if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ valid: false, error: 'Method not allowed' });
+  const { key, hwid } = req.body;
+  const data = getKey(key);
 
-  try {
-    const { key, hwid } = req.body || {};
-    if (!key || !hwid) return res.status(400).json({ valid: false, error: 'Key and HWID required' });
+  if (!data) return res.json({ valid: false, error: "Key not found" });
+  if (!data.enabled) return res.json({ valid: false, error: "Key disabled" });
+  if (data.hwid !== hwid) return res.json({ valid: false, error: "HWID mismatch" });
 
-    const keys = getKeys();
-    const record = keys[key];
-    if (!record) return res.status(200).json({ valid: false, error: 'Key not found' });
-
-    const normalized = normalizeHWID(hwid);
-    if (!record.enabled) return res.status(200).json({ valid: false, error: 'Key disabled' });
-    if (record.hwid !== normalized) return res.status(200).json({ valid: false, error: 'HWID mismatch' });
-
-    return res.status(200).json({ valid: true, message: 'Key verified successfully', generated_at: record.generated_at });
-  } catch (err) {
-    console.error('verify-key error', err);
-    return res.status(500).json({ valid: false, error: 'Internal server error' });
-  }
-};
+  return res.json({ valid: true, message: "Key valid" });
+}
