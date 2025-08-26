@@ -193,7 +193,7 @@
   </div>
 
   <script>
-    const BASE_URL = "";
+    const BASE_URL = "https://key-system-eight.vercel.app";
     
     function showLoading(buttonId) {
       const btn = document.getElementById(buttonId);
@@ -227,7 +227,6 @@
       showLoading('genBtn');
       
       try {
-        const response = await fetch(`${BASE_URL}/api/generate-key`, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
