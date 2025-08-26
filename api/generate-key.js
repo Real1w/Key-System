@@ -4,8 +4,11 @@ if (Object.keys(keys).length === 0) {
   keys["ModXTEST123456789"] = {
     hwid: "test-hwid-12345",
     enabled: true,
-    generated_at: Date.now()
+    generated_at: Date.now(),
+    last_used: null,
+    last_modified: Date.now()
   };
+  console.log("Initialized with test key");
 }
 
 export default function handler(req, res) {
@@ -34,7 +37,6 @@ export default function handler(req, res) {
     });
   }
 
-  // Check if HWID already has a key
   const existingKey = Object.keys(keys).find(key => keys[key].hwid === hwid);
   if (existingKey) {
     return res.json({
@@ -53,11 +55,13 @@ export default function handler(req, res) {
   keys[key] = {
     hwid: hwid.trim(),
     enabled: true,
-    generated_at: Date.now()
+    generated_at: Date.now(),
+    last_used: null,
+    last_modified: Date.now()
   };
 
   console.log(`Generated new key: ${key} for HWID: ${hwid}`);
-
+  
   res.json({ 
     success: true, 
     key, 
